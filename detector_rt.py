@@ -83,7 +83,27 @@ while True:
     pilimg = Image.fromarray(frame)
     detections = detect_image(pilimg)
 
-    print (detections)
+    # The amount of padding that was added
+    pad_x = max(frame.shape[0] - frame.shape[1], 0) * (opt.img_size / max(frame.shape))
+    pad_y = max(frame.shape[1] - frame.shape[0], 0) * (opt.img_size / max(frame.shape))
+    # Image height and width after padding is removed
+    unpad_h = opt.img_size - pad_y
+    unpad_w = opt.img_size - pad_x
+
+    for detection in detections:
+        if (detection is None):
+            continue
+        for x1, y1, x2, y2, conf, cls_conf, cls_pred in detection:
+
+            print ('\t+ Label: %s, Conf: %.5f' % (classes[int(cls_pred)], cls_conf.item()))
+
+            # Rescale coordinates to original dimensions
+            box_h = ((y2 - y1) / unpad_h) * frame.shape[0]
+            box_w = ((x2 - x1) / unpad_w) * frame.shape[1]
+            y1 = ((y1 - pad_y // 2) / unpad_h) * frame.shape[0]
+            x1 = ((x1 - pad_x // 2) / unpad_w) * frame.shape[1]
+            cv2.rectangle(frame,(x1,y1),(x1+box_w,y1+box_h),(0,255,0),2)
+
 
     frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
     frame = cv2.resize(frame, None,fx=0.5,fy=0.5)
